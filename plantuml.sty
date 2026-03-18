@@ -1,0 +1,203 @@
+%% Copyright (C) 2018 Oliver Kopp, https://github.com/koppor
+%%
+%% SPDX-License-Identifier: LPPL-1.3c+
+\NeedsTeXFormat{LaTeX2e}\relax
+\ProvidesPackage{plantuml}
+  [2020/05/19 v0.3.1
+  Embed PlantUML diagrams in latex documents.]
+
+% Required by PlantUML LaTeX output
+\RequirePackage{tikz}
+
+% Enable checking for active -shell-escape
+% Source: https://tex.stackexchange.com/a/88620/9075
+\RequirePackage{pdftexcmds}
+
+% Prepare writing contents of a self-defined environment to a file
+% Source: https://tex.stackexchange.com/a/130298/9075
+\RequirePackage{fancyvrb}
+
+\RequirePackage{l3keys2e}
+\RequirePackage{xparse}
+
+\RequirePackage{ifthen}
+
+\RequirePackage{adjustbox}
+
+% \jobname has an encoding issue if the .tex filename includes a multibyte string.
+% One needs to redefine PlantUMLJobname to fix it
+\def\PlantUMLJobname{\jobname-\thePlantUmlFigureNumber}
+
+\RequirePackage{l3keys2e}
+
+\ExplSyntaxOn
+\tl_new:N \l_plantuml_mode
+
+\ProvidesExplPackage{plantuml}{2020-05-19}{0.3.1}
+  {Embed PlantUML diagrams in LaTeX documents.}
+
+\keys_define:nn { plantuml }{
+  output .value_required:n = true,
+  output .code:n = { \tl_gset:Nn \l_plantuml_mode {#1} },
+  output .initial:n = latex,
+}
+\ProcessKeysOptions { plantuml }
+\ExplSyntaxOff
+
+%hint from https://tex.stackexchange.com/a/86355/9075
+\makeatletter
+\def\maxwidth#1{\ifdim\Gin@nat@width>#1 #1\else\Gin@nat@width\fi}
+\makeatother
+
+\ExplSyntaxOn
+\let\PlantUmlMode\l_plantuml_mode
+\ExplSyntaxOff
+
+\newcounter{PlantUmlFigureNumber}
+
+\ifluatex
+  \RequirePackage{luacode}
+  \begin{luacode}
+    local has_md5, md5 = pcall(require, "md5")
+
+    local function file_exists(path)
+      local f = io.open(path, "rb")
+      if f then f:close(); return true end
+      return false
+    end
+
+    local function read_all(path)
+      local f, err = io.open(path, "rb")
+      if not f then return nil, err end
+      local s = f:read("*a")
+      f:close()
+      return s
+    end
+
+    local function write_all(path, s)
+      local f, err = io.open(path, "wb")
+      if not f then return false, err end
+      f:write(s)
+      f:close()
+      return true
+    end
+
+    local function hash_content(s)
+      if has_md5 and md5 and md5.sumhexa then
+        return md5.sumhexa(s)
+      end
+      -- Fallback (heel zeldzaam nodig). Zonder md5 geen caching.
+      return nil
+    end
+
+    -- @param mode direct doorgegeven aan PlantUML: png/svg/pdf/latex...
+    function convertPlantUml(jobname, mode)
+      local src = jobname .. "-plantuml.txt"
+      local out = jobname .. "-plantuml." .. mode
+      local hashfile = jobname .. "-plantuml.hash"
+
+      if not file_exists(src) then
+        texio.write_nl("Source " .. src .. " does not exist.")
+        return
+      end
+
+      local content, err = read_all(src)
+      if not content then
+        texio.write_nl("Cannot read " .. src .. ": " .. tostring(err))
+        return
+      end
+
+      -- Hash hangt ook af van mode (anders hergebruikt hij latex-hash voor png etc.)
+      local NL = string.char(10)
+      local SEP = string.char(0)
+      local h = hash_content(content .. NL .. SEP .. "MODE" .. SEP .. NL .. tostring(mode) .. NL)
+      if h and file_exists(hashfile) and file_exists(out) then
+        local old = read_all(hashfile)
+        if old and old:gsub("%s+$","") == h then
+          texio.write_nl("PlantUML cached; skipping generation for " .. out)
+          return
+        end
+      end
+
+      local cmd = "plantuml"
+      local plantUmlJar = os.getenv("PLANTUML_JAR")
+      if plantUmlJar then
+        cmd = "java -Djava.awt.headless=true -jar " .. plantUmlJar
+      end
+      if (mode == "latex") then
+        cmd = cmd .. " -tlatex:nopreamble"
+      else
+        cmd = cmd .. " -t" .. mode
+      end
+      cmd = cmd .. " -charset UTF-8"
+      cmd = cmd .. " " .. src
+
+      texio.write("Executing PlantUML... ")
+      texio.write_nl(cmd)
+
+      local handle, perr = io.popen(cmd)
+      if not handle then
+        texio.write_nl("Error during execution of PlantUML.")
+        texio.write_nl(tostring(perr))
+        return
+      end
+      io.close(handle)
+
+      if not file_exists(out) then
+        texio.write_nl("PlantUML did not generate anything.")
+        local f = io.open(out, "wb")
+        if f then
+          f:write("Error during latex code generation")
+          f:close()
+        end
+        return
+      end
+
+      -- Cache update
+      if h then
+        write_all(hashfile, h .. NL)
+      end
+    end
+  \end{luacode}
+\else
+  \RequirePackage[usefamily=bash]{pythontex}
+\fi
+
+\makeatletter
+\ifcase\pdf@shellescape
+  \message{No shell escape. PlantUML cannot be called. Start pdflatex/lualatex with -shell-escape.}
+  \newenvironment{plantuml}{%
+    No shell escape. PlantUML cannot be called. Start pdflatex/lualatex with -shell-escape.
+  }{}
+\or
+  \NewDocumentEnvironment{plantuml}{}{
+    \VerbatimOut{\PlantUMLJobname-plantuml.txt}}
+  {
+    \endVerbatimOut
+    \typeout{creating plantuml -- \PlantUMLJobname}
+    \ifluatex
+      \directlua{
+        local jobname=\luastring{\PlantUMLJobname}
+        local plantUmlMode=\luastring{\PlantUmlMode}
+        convertPlantUml(jobname, plantUmlMode)
+      }
+    \else
+      \typeout{*** plantuml only works with lualatex ***}
+    \fi
+    \ifthenelse{\equal{\PlantUmlMode}{latex}}{
+      \begin{adjustbox}{max width=\linewidth}
+        \input{\PlantUMLJobname-plantuml.latex}
+      \end{adjustbox}
+    }{
+      \includegraphics[width=\maxwidth{\textwidth}]{\PlantUMLJobname-plantuml.\PlantUmlMode}
+    }
+    \stepcounter{PlantUmlFigureNumber}
+  }
+\or
+  \message{Restricted shell escape. PlantUML cannot be called. Start pdflatex/lualatex with -shell-escape.}
+  \newenvironment{plantuml}{%
+    Restricted shell escape. PlantUML cannot be called. Start pdflatex/lualatex with -shell-escape.
+  }{}
+\fi
+\makeatother
+

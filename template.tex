@@ -1,0 +1,80 @@
+<< template "prefix.tex" . >>
+\begin{document}
+<<- if (index . "has-frontmatter") >>
+\frontmatter
+<<- end >>
+<< template "title.tex" . >>
+<<- if .cover >>
+\clearpage
+\thispagestyle{empty}
+\null
+\clearpage
+\large
+\vspace*{\fill}
+
+<<- with .covertable >>
+\begin{longtable}[]{@{}rl@{}}
+<<- range . >>
+\textbf{<< index . 0 >>} & << index . 1 >> \\
+<<- end >>
+\end{longtable}
+<<- end >>
+
+Copyright \copyright \the\year{} \theauthor
+
+\normalsize
+\newpage
+\newpage
+<<- end >>
+<<- range (index . "include-before") >>
+<< . >>
+
+<<- end >>
+<<- if .toc >>
+  <<- with (index . "toc-title") >>
+\renewcommand*\contentsname{<< . >>}
+  <<- end >>
+{
+\setcounter{tocdepth}{<< index . "toc-depth" >>}
+\tableofcontents
+}
+<<- end >>
+<<- if .lof >>
+\listoffigures
+<<- end >>
+<<- if .lot >>
+\listoftables
+<<- end >>
+<<- if .linestretch >>
+\setstretch{<< .linestretch >>}
+<<- end >>
+<<- if (index . "has-frontmatter") >>
+\mainmatter
+<<- end >>
+<< .body >>
+
+<<- if (index . "has-frontmatter") >>
+\backmatter
+<<- end >>
+<<- if .natbib >>
+  <<- if .bibliography >>
+    <<- with (index . "biblio-title") >>
+      <<- if (index $ "has-chapters") >>
+\renewcommand\bibname{<< . >>}
+      <<- else >>
+\renewcommand\refname{<< . >>}
+      <<- end >>
+    <<- end >>
+  \bibliography{<< join "," .bibliography >>}
+
+  <<- end >>
+<<- end >>
+<<- if .biblatex >>
+\printbibliography<<- with (index . "biblio-title") >>[title=<< . >>]<<- end >>
+
+<<- end >>
+<<- range (index . "include-after") >>
+<< . >>
+
+<<- end >>
+\end{document}

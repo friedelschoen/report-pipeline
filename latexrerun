@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -o pipefail
+
+max_passes=5
+pattern='rerun (to|get|latex)|label(s)? may have changed|undefined references|citation.*undefined|please \(re\)run biber|rerunfilecheck warning'
+
+pwd=$1; shift
+log=$1; shift
+count=0
+
+cd "$pwd"
+rm -f "$log"
+while true; do
+    count=$((count+1))
+    printf "\033[1;95m==> latex run %s\033[0m\n" "$count"
+    "$@" | grep -vE '\(/'
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        printf "\033[1;31m==> !! Command failed (%s). stopping.\033[0m\n" "$rc"
+        exit $rc
+    fi
+    grep -Eiq "$pattern" "$log" || break
+    if [ "$count" -ge "$max_passes" ]; then
+        printf '\033[1;31m==> !! Reached max passes ($s). stopping.\033[0m\n' "$max_passes"
+        break
+    fi
+done
+
+printf "\033[1;32m :: %s runs were needed\033[0m\n" "$count"

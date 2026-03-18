@@ -1,0 +1,40 @@
+\begin{titlepage}
+\pagecolor{<<.titlepagecolor>>}\afterpage{\nopagecolor}
+\color{<<.titletextcolor>>}
+\centering
+\vspace*{0.5cm}
+<< if .titlelogo >>
+\includegraphics[width=0.4\textwidth]{<<.curdir>>/assets/<<.titlelogo>>}\par\vspace{1cm}
+<< end >>
+\Huge
+\textbf{<< .title >>}
+\\
+\huge
+\textbf{<< .subtitle >>}
+
+\vspace{1cm}
+
+\textbf{<< .author >>}
+
+\vfill
+
+\Large
+<< range .titletable >>
+\textbf{<< index . 0 >>:} << index . 1 >> \\
+<< end >>
+<< if .confidant >>
+\vspace{0.5cm}
+
+\large
+\textbf{\textit{Dit document bevat vertrouwelijke informatie.}}
+<< end >>
+\vspace{0.5cm}
+
+\Large
+\today
+
+\vspace{1cm}
+<< if .schoollogo >>
+\includegraphics[width=0.3\textwidth]{<<.curdir>>/assets/<<.schoollogo>>}
+<< end >>
+\end{titlepage}
