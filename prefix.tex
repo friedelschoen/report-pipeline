@@ -362,7 +362,7 @@
 \subtitle{<< .subtitle >>}
 <<- end >>
 \author{<< join " \\and " .author >>}
-\date{<< .date >>}
+\date{<< default "\\today" .date >>}
 <<- if .beamer >>
   <<- with .institute >>
 \institute{<< join " \\and " . >>}

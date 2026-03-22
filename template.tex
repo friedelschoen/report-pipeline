@@ -5,26 +5,7 @@
 <<- end >>
 << template "title.tex" . >>
 <<- if .cover >>
-\clearpage
-\thispagestyle{empty}
-\null
-\clearpage
-\large
-\vspace*{\fill}
-
-<<- with .covertable >>
-\begin{longtable}[]{@{}rl@{}}
-<<- range . >>
-\textbf{<< index . 0 >>} & << index . 1 >> \\
-<<- end >>
-\end{longtable}
-<<- end >>
-
-Copyright \copyright \the\year{} \theauthor
-
-\normalsize
-\newpage
-\newpage
+<< template "cover.tex" . >>
 <<- end >>
 <<- range (index . "include-before") >>
 << . >>

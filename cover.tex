@@ -1,0 +1,22 @@
+<<- if .pagebeforecover >>
+\clearpage
+\thispagestyle{empty}
+\null
+<<- end >>
+\clearpage
+\large
+\vspace*{\fill}
+
+<<- with .covertable >>
+\begin{longtable}[]{@{}rl@{}}
+<<- range . >>
+\textbf{<< index . 0 >>} & << index . 1 >> \\
+<<- end >>
+\end{longtable}
+<<- end >>
+
+Copyright \copyright \the\year{} \theauthor
+
+\normalsize
+\newpage
+\newpage
