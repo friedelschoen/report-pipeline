@@ -1,94 +1,93 @@
 % Options for packages loaded elsewhere
-\PassOptionsToPackage{unicode<<- with (index . "hyperrefoptions") >>,<< join "," . >><<- end >>}{hyperref}
+\PassOptionsToPackage{unicode<% if hyperrefoptions %>,<< hyperrefoptions | listify | join(",") >><% endif %>}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 %
 \documentclass[
-<<- with .fontsize >>
-  << . >>,
-<<- end >>
-<<- with .papersize >>
-  << . >>paper,
-<<- end >>
-<<- with .classoption >>
-  << join "," . >>
-<<- end >>
-]{<< .documentclass >>}
+<% if fontsize %>
+  << fontsize >>,
+<% endif %>
+<% if papersize %>
+  << papersize >>paper,
+<% endif %>
+<% if classoption %>
+  << classoption | listify | join(",") >>
+<% endif %>
+]{<< documentclass >>}
 \usepackage{amsmath,amssymb}
-<<- if .linestretch >>
+<% if linestretch %>
 \usepackage{setspace}
-<<- end >>
+<% endif %>
 \usepackage{iftex}
-<<- if .mathspec >>
+<% if mathspec %>
   \ifXeTeX
     \usepackage{mathspec} % this also loads fontspec
   \else
     \usepackage{unicode-math} % this also loads fontspec
   \fi
-<<- else >>
+<% else %>
   \usepackage{unicode-math} % this also loads fontspec
-<<- end >>
+<% endif %>
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
-<<- if .fontfamily >>
-<<- else >>
+<% if not fontfamily %>
 \usepackage{lmodern}
-<<- end >>
+<% endif %>
 
-<<- if .fontfamily >>
-\usepackage[<< join "," .fontfamilyoptions >>]{<< .fontfamily >>}
-<<- end >>
-<<- if .mainfont >>
-  \setmainfont[<< join "," .mainfontoptions >>]{<< .mainfont >>}
-<<- end >>
-<<- if .sansfont >>
-  \setsansfont[<< join "," .sansfontoptions >>]{<< .sansfont >>}
-<<- end >>
-<<- if .monofont >>
-  \setmonofont[<< join "," .monofontoptions >>]{<< .monofont >>}
-<<- end >>
-<<- range .fontfamilies >>
-  \newfontfamily{<< .name >>}[<< join "," .options >>]{<< .font >>}
-<<- end >>
-<<- if .mathfont >>
-  <<- if .mathspec >>
+<% if fontfamily %>
+\usepackage[<< fontfamilyoptions | listify | join(",") >>]{<< fontfamily >>}
+<% endif %>
+<% if mainfont %>
+  \setmainfont[<< mainfontoptions | listify | join(",") >>]{<< mainfont >>}
+<% endif %>
+<% if sansfont %>
+  \setsansfont[<< sansfontoptions | listify | join(",") >>]{<< sansfont >>}
+<% endif %>
+<% if monofont %>
+  \setmonofont[<< monofontoptions | listify | join(",") >>]{<< monofont >>}
+<% endif %>
+<% for item in fontfamilies %>
+  \newfontfamily{<< name >>}[<< options | listify | join(",") >>]{<< font >>}
+<% endfor %>
+<% if mathfont %>
+  <% if mathspec %>
   \ifXeTeX
-    \setmathfont(Digits,Latin,Greek)[<< join "," $.mathfontoptions >>]{<< $.mathfont >>}
+    \setmathfont(Digits,Latin,Greek)[<< mathfontoptions | listify | join(",") >>]{<< mathfont >>}
   \else
-    \setmathfont[<< join "," $.mathfontoptions >>]{<< $.mathfont >>}
+    \setmathfont[<< mathfontoptions | listify | join(",") >>]{<< mathfont >>}
   \fi
-  <<- else >>
-  \setmathfont[<< join "," .mathfontoptions >>]{<< .mathfont >>}
-  <<- end >>
-<<- end >>
-<<- with (index . "CJKmainfont") >>
+  <% else %>
+  \setmathfont[<< mathfontoptions | listify | join(",") >>]{<< mathfont >>}
+  <% endif %>
+<% endif %>
+<% if CJKmainfont %>
   \ifXeTeX
     \usepackage{xeCJK}
-    \setCJKmainfont[<< join "," $.CJKoptions >>]{<< . >>}
-    <<- with (index $ "CJKsansfont") >>
-      \setCJKsansfont[<< join "," $.CJKoptions >>]{<< . >>}
-    <<- end >>
-    <<- with (index $ "CJKmonofont") >>
-      \setCJKmonofont[<< join "," $.CJKoptions >>]{<< . >>}
-    <<- end >>
+    \setCJKmainfont[<< CJKoptions | listify | join(",") >>]{<< CJKmainfont >>}
+    <% if CJKsansfont %>
+      \setCJKsansfont[<< CJKoptions | listify | join(",") >>]{<< CJKsansfont >>}
+    <% endif %>
+    <% if CJKmonofont %>
+      \setCJKmonofont[<< CJKoptions | listify | join(",") >>]{<< CJKmonofont >>}
+    <% endif %>
   \fi
-<<- end >>
-<<- with .luatexjapresetoptions >>
+<% endif %>
+<% if luatexjapresetoptions %>
   \ifLuaTeX
-    \usepackage[<< join "," . >>]{luatexja-preset}
+    \usepackage[<< luatexjapresetoptions | listify | join(",") >>]{luatexja-preset}
   \fi
-<<- end >>
-<<- with (index . "CJKmainfont") >>
+<% endif %>
+<% if CJKmainfont %>
   \ifLuaTeX
-    \usepackage[<< join "," $.luatexjafontspecoptions >>]{luatexja-fontspec}
-    \setmainjfont[<< join "," $.CJKoptions >>]{<< . >>}
+    \usepackage[<< luatexjafontspecoptions | listify | join(",") >>]{luatexja-fontspec}
+    \setmainjfont[<< CJKoptions | listify | join(",") >>]{<< CJKmainfont >>}
   \fi
-<<- end >>
-<<- if (index . "zero-width-non-joiner") >>
+<% endif %>
+<% if zero_width_non_joiner %>
 %% Support for zero-width non-joiner characters.
 \makeatletter
-\def\zerowidthnonjoiner{%
+\def\zerowidthnonjoiner{
   % Prevent ligatures and adjust kerning, but still support hyphenating.
-  \texorpdfstring{%
+  \texorpdfstring{
     \TextOrMath{\nobreak\discretionary{-}{}{\kern.03em}%
       \ifvmode\else\nobreak\hskip\z@skip\fi}{}%
   }{}%
@@ -97,15 +96,15 @@
 \catcode`^^^^200c=\active
 \protected\def ^^^^200c{\zerowidthnonjoiner}
 %% End of ZWNJ support
-<<- end >>
+<% endif %>
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \IfFileExists{microtype.sty}{% use microtype if available
-  \usepackage[<< join "," .microtypeoptions >>]{microtype}
+  \usepackage[<< microtypeoptions | listify | join(",") >>]{microtype}
   \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
-<<- if .indent >>
-<<- else >>
+<% if indent %>
+<% else %>
 \makeatletter
 \@ifundefined{KOMAClassName}{% if non-KOMA class
   \IfFileExists{parskip.sty}{%
@@ -116,39 +115,39 @@
 }{% if KOMA class
   \KOMAoptions{parskip=half}}
 \makeatother
-<<- end >>
-<<- if (index . "verbatim-in-note") >>
+<% endif %>
+<% if verbatim_in_note %>
 \usepackage{fancyvrb}
-<<- end >>
+<% endif %>
 \usepackage{xcolor}
-<<- with .geometry >>
-\usepackage[<< join "," . >>]{geometry}
-<<- end >>
-<<- if .listings >>
+<% if geometry %>
+\usepackage[<< geometry | listify | join(",") >>]{geometry}
+<% endif %>
+<% if listings %>
 \usepackage{listings}
 \newcommand{\passthrough}[1]{#1}
 \lstset{defaultdialect=[5.3]Lua}
 \lstset{defaultdialect=[x86masm]Assembler}
-<<- end >>
-<<- if .lhs >>
+<% endif %>
+<% if lhs %>
 \lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small\ttfamily}}{}
-<<- end >>
-<<- with (index . "highlighting-macros") >>
-<< . >>
-<<- end >>
-<<- if .tables >>
+<% endif %>
+<% if highlighting_macros %>
+<< highlighting_macros >>
+<% endif %>
+<% if tables %>
 \usepackage{longtable,booktabs,array}
-  <<- if .multirow >>
+  <% if multirow %>
 \usepackage{multirow}
-  <<- end >>
+  <% endif %>
 \usepackage{calc} % for calculating minipage widths
-  <<- if .beamer >>
+  <% if beamer %>
 \usepackage{caption}
 % Make caption package work with longtable
 \makeatletter
 \def\fnum@table{\tablename~\thetable}
 \makeatother
-  <<- else >>
+  <% else %>
 % Correct order of tables after \paragraph or \subparagraph
 \usepackage{etoolbox}
 \makeatletter
@@ -157,9 +156,9 @@
 % Allow footnotes in longtable head/foot
 \IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
 \makesavenoteenv{longtable}
-  <<- end >>
-<<- end >>
-<<- if .graphics >>
+  <% endif %>
+<% endif %>
+<% if graphics %>
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -173,39 +172,39 @@
 \makeatletter
 \def\fps@figure{htbp}
 \makeatother
-<<- end >>
-<<- if .svg >>
+<% endif %>
+<% if svg %>
 \usepackage{svg}
-<<- end >>
-<<- if .strikeout >>
+<% endif %>
+<% if strikeout %>
 \ifLuaTeX
   \usepackage{luacolor}
   \usepackage[soul]{lua-ul}
 \else
   \usepackage{soul}
-  <<- with (index . "CJKmainfont") >>
+  <% if CJKmainfont %>
   \ifXeTeX
     % soul's \st doesn't work for CJK:
     \usepackage{xeCJKfntef}
     \renewcommand{\st}[1]{\sout{#1}}
   \fi
-  <<- end >>
+  <% endif %>
 \fi
-<<- end >>
+<% endif %>
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-<<- if .numbersections >>
-\setcounter{secnumdepth}{<< default 5 .secnumdepth >>}
-<<- else >>
+<% if numbersections %>
+\setcounter{secnumdepth}{<< secnumdepth or 5 >>}
+<% else %>
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
-<<- end >>
-<<- if .subfigure >>
+<% endif %>
+<% if subfigure %>
 \usepackage{subcaption}
-<<- end >>
-<<- if .beamer >>
-<<- else >>
-  <<- if (index . "block-headings") >>
+<% endif %>
+<% if beamer %>
+<% else %>
+  <% if block_headings %>
 % Make \paragraph and \subparagraph free-standing
 \ifx\paragraph\undefined\else
   \let\oldparagraph\paragraph
@@ -215,12 +214,12 @@
   \let\oldsubparagraph\subparagraph
   \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
-  <<- end >>
-<<- end >>
-<<- with .pagestyle >>
-\pagestyle{<< . >>}
-<<- end >>
-<<- if (index . "csl-refs") >>
+  <% endif %>
+<% endif %>
+<% if pagestyle %>
+\pagestyle{<< pagestyle >>}
+<% endif %>
+<% if csl_refs %>
 % definitions for citeproc citations
 \NewDocumentCommand\citeproctext{}{}
 \NewDocumentCommand\citeproc{mm}{%
@@ -250,130 +249,114 @@
 \newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
-<<- end >>
-<<- with .lang >>
-\ifLuaTeX
-\usepackage[bidi=basic]{babel}
-\else
-\usepackage[bidi=default]{babel}
-\fi
-  <<- with (index $ "babel-lang") >>
-\babelprovide[main,import]{<< . >>}
-    <<- with $.mainfont >>
-\babelfont{rm}[<< join "," $.mainfontoptions >>]{<< . >>}
-    <<- end >>
-  <<- end >>
-  <<- range (index $ "babel-otherlangs") >>
-\babelprovide[import]{<< . >>}
-  <<- end >>
-  <<- range (index $ "babelfonts") >>
-\babelfont[<< .key >>]{rm}{<< .value >>}
-  <<- end >>
-% get rid of language-specific shorthands (see #6817):
-\let\LanguageShortHands\languageshorthands
-\def\languageshorthands#1{}
-<<- end >>
-<<- usepackage .packages .packageoptions >>
-<<- range $key, $value := (index . "newcommands") >>
-\newcommand{\<< $key >>}{<< $value >>}
-<<- end >>
-\newcommand{\curdir}{<< .curdir >>}
-<<- range (index . "header-includes") >>
-<< . >>
-<<- end >>
-<<- range $key, $value := (index . "colors") >>
-\definecolor{<< $key >>}{HTML}{<< $value >>}
-<<- end >>
+<% endif %>
+<% for package in packages %>
+<% if package in packageoptions %>
+\usepackage[<< packageoptions[package] >>]{<<package>>}
+<% else %>
+\usepackage{<<package>>}
+<% endif %>
+<% endfor %>
+<% for key, value in newcommands.items() %>
+\newcommand{\<< key >>}{<< value >>}
+<% endfor %>
+\newcommand{\curdir}{<< curdir >>}
+<% for item in header_includes %>
+<< item >>
+<% endfor %>
+<% for key, value in colors.items() %>
+\definecolor{<< key >>}{HTML}{<< value >>}
+<% endfor %>
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
-<<- if .dir >>
-<<- end >>
-<<- if .natbib >>
-\usepackage[<< .natbiboptions >>]{natbib}
-\bibliographystyle{<< default "plainnat" (index . "biblio-style") >>}
-<<- end >>
-<<- if .biblatex >>
-\usepackage[<<- with (index . "biblio-style") >>style=<< . >>,<<- end >><< join "," .biblatexoptions >>]{biblatex}
-  <<- range .bibliography >>
-\addbibresource{<< . >>}
-  <<- end >>
-<<- end >>
-<<- with (index . "nocite-ids") >>
-\nocite{<< join ", " . >>}
-<<- end >>
-<<- if .csquotes >>
+<% if dir %>
+<% endif %>
+<% if natbib %>
+\usepackage[<< natbiboptions >>]{natbib}
+\bibliographystyle{<< biblio_style or "plainnat" >>}
+<% endif %>
+<% if biblatex %>
+\usepackage[<% if biblio_style %>style=<< biblio_style >>,<% endif %><< biblatexoptions | listify | join(",") >>]{biblatex}
+  <% for item in bibliography %>
+\addbibresource{<< item >>}
+  <% endfor %>
+<% endif %>
+<% if nocite_ids %>
+\nocite{<< nocite_ids | listify | join(", ") >>}
+<% endif %>
+<% if csquotes %>
 \usepackage{csquotes}
-<<- end >>
+<% endif %>
 \usepackage{bookmark}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{<< default "same" .urlstyle >>}
-<<- if (index . "links-as-notes") >>
+\urlstyle{<< urlstyle or "same" >>}
+<% if links_as_notes %>
 % Make links footnotes instead of hotlinks:
 \DeclareRobustCommand{\href}[2]{#2\footnote{\url{#1}}}
-<<- end >>
-<<- if (index . "verbatim-in-note") >>
+<% endif %>
+<% if verbatim_in_note %>
 \VerbatimFootnotes % allow verbatim text in footnotes
-<<- end >>
+<% endif %>
 \hypersetup{
-<<- with (index . "title-meta") >>
-  pdftitle={<< . >>},
-<<- end >>
-<<- with (index . "author-meta") >>
-  pdfauthor={<< . >>},
-<<- end >>
-<<- with .lang >>
-  pdflang={<< . >>},
-<<- end >>
-<<- with .subject >>
-  pdfsubject={<< . >>},
-<<- end >>
-<<- with .keywords >>
-  pdfkeywords={<< join ", " . >>},
-<<- end >>
-<<- if .colorlinks >>
+<% if title_meta %>
+  pdftitle={<< title_meta >>},
+<% endif %>
+<% if author_meta %>
+  pdfauthor={<< author_meta >>},
+<% endif %>
+<% if lang %>
+  pdflang={<< lang >>},
+<% endif %>
+<% if subject %>
+  pdfsubject={<< subject >>},
+<% endif %>
+<% if keywords %>
+  pdfkeywords={<< keywords | listify | join(", ") >>},
+<% endif %>
+<% if colorlinks %>
   colorlinks=true,
-  linkcolor={<< default "Maroon" .linkcolor >>},
-  filecolor={<< default "Maroon" .filecolor >>},
-  citecolor={<< default "Blue" .citecolor >>},
-  urlcolor={<< default "Blue" .urlcolor >>},
-<<- else >>
-  <<- if .boxlinks >>
-  <<- else >>
+  linkcolor={<< linkcolor or "Maroon" >>},
+  filecolor={<< filecolor or "Maroon" >>},
+  citecolor={<< citecolor or "Blue" >>},
+  urlcolor={<< urlcolor or "Blue" >>},
+<% else %>
+  <% if boxlinks %>
+  <% else %>
   hidelinks,
-  <<- end >>
-<<- end >>
+  <% endif %>
+<% endif %>
   pdfcreator={LaTeX via pandoc}}
 
-<<- if .title >>
-\title{<<- with .subtitle >><< . >> - <<- end >><< .title >><<- with .thanks >>\thanks{<< . >>}<<- end >>}
+<% if title %>
+\title{<% if subtitle %><< subtitle >> - <% endif %><< title >><% if thanks %>\thanks{<< thanks >>}<% endif %>}
 \newpage
-<<- end >>
-<<- if .subtitle >>
-  <<- if .beamer >>
-  <<- else >>
+<% endif %>
+<% if subtitle %>
+  <% if beamer %>
+  <% else %>
 \usepackage{etoolbox}
 \makeatletter
 \providecommand{\subtitle}[1]{% add subtitle to \maketitle
   \apptocmd{\@title}{\par {\large #1 \par}}{}{}
 }
 \makeatother
-  <<- end >>
-\subtitle{<< .subtitle >>}
-<<- end >>
-\author{<< join " \\and " .author >>}
-\date{<< default "\\today" .date >>}
-<<- if .beamer >>
-  <<- with .institute >>
-\institute{<< join " \\and " . >>}
-  <<- end >>
-  <<- with .titlegraphic >>
-\titlegraphic{\includegraphics{<< . >>}}
-  <<- end >>
-  <<- with .logo >>
-\logo{\includegraphics{<< . >>}}
-  <<- end >>
-<<- end >>
+  <% endif %>
+\subtitle{<< subtitle >>}
+<% endif %>
+\author{<< author | listify | join(" \\and ") >>}
+\date{<< date or "\\today" >>}
+<% if beamer %>
+  <% if institute %>
+\institute{<< institute | listify | join(" \\and ") >>}
+  <% endif %>
+  <% if titlegraphic %>
+\titlegraphic{\includegraphics{<< titlegraphic >>}}
+  <% endif %>
+  <% if logo %>
+\logo{\includegraphics{<< logo >>}}
+  <% endif %>
+<% endif %>
 \usepackage[
   backend=biber,
   bibencoding=utf8

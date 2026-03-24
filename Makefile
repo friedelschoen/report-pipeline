@@ -9,9 +9,6 @@ PLUGINDIR 	?= $(ROOTLIB)/plugins
 SRCFILES 	:= $(wildcard $(SRCDIR)/*.md)
 OUTFILES 	:= $(patsubst $(SRCDIR)/%.md,$(OUTDIR)/%.pdf,$(SRCFILES))
 
-GOTEMPLATE  := $(ROOTLIB)/gotemplate
-GOTEMPLBIN 	:= $(BUILDDIR)/gotemplate
-
 PLUGINS 	+= $(wildcard $(PLUGINDIR)/*.lua)
 
 PANDOCARGS 	+= \
@@ -29,25 +26,26 @@ LATEXARGS 	+= \
 	-interaction=nonstopmode \
 	-shell-escape
 
-.PRECIOUS: $(patsubst $(SRCDIR)/%.md,$(BUILDDIR)/%.tex $(BUILDDIR)/%-body.tex $(BUILDDIR)/%.pdf,$(SRCFILES))
+.PRECIOUS: $(patsubst $(SRCDIR)/%.md,$(BUILDDIR)/%.tex $(BUILDDIR)/%-body.tex $(BUILDDIR)/%-header.yml $(BUILDDIR)/%.pdf,$(SRCFILES))
 
 .PHONY: all clean
 all: $(OUTFILES)
-
-$(GOTEMPLBIN): $(GOTEMPLATE)/*
-	go build -C $(GOTEMPLATE) -o $(abspath $@) -v
 
 $(BUILDDIR)/%-body.tex: $(SRCDIR)/%.md $(ROOTLIB)/*
 	mkdir -p $(dir $@)
 	pandoc $(PANDOCARGS) -o $@ $<
 
-$(BUILDDIR)/%.tex: $(BUILDDIR)/%-body.tex $(GOTEMPLBIN) $(META)
-	$(GOTEMPLBIN) -o $@ -b $< -D curdir=$(abspath .) $(ROOTLIB)/template.tex $(META)
+$(BUILDDIR)/%-header.yml: $(SRCDIR)/%.md $(ROOTLIB)/*
+	mkdir -p $(dir $@)
+	$(ROOTLIB)/scripts/markdownheader < $< > $@
+
+$(BUILDDIR)/%.tex: $(BUILDDIR)/%-body.tex $(BUILDDIR)/%-header.yml $(ROOTLIB)/scripts/templater $(META)
+	$(ROOTLIB)/scripts/templater -o $@ -b $< -D curdir=$(abspath .) $(ROOTLIB)/template.tex $(META) $(word 2,$^)
 
 $(BUILDDIR)/%.pdf: $(BUILDDIR)/%.tex
 	openout_any=a \
 	TEXINPUTS="$(abspath $(SRCDIR))//:$(abspath $(ROOTLIB))//:" \
-	$(ROOTLIB)/latexrerun "$(dir $@)" "$(notdir $(patsubst %.pdf,%.log,$@))" lualatex $(LATEXARGS) "$(abspath $<)"
+	$(ROOTLIB)/scripts/latexrerun "$(dir $@)" "$(notdir $(patsubst %.pdf,%.log,$@))" lualatex $(LATEXARGS) "$(abspath $<)"
 
 $(OUTDIR)/%.pdf: $(BUILDDIR)/%.pdf
 	mkdir -p $(dir $@)

@@ -1,19 +1,19 @@
-<<- if .pagebeforecover >>
+<% if pagebeforecover %>
 \clearpage
 \thispagestyle{empty}
 \null
-<<- end >>
+<% endif %>
 \clearpage
 \large
 \vspace*{\fill}
 
-<<- with .covertable >>
+<% if covertable %>
 \begin{longtable}[]{@{}rl@{}}
-<<- range . >>
-\textbf{<< index . 0 >>} & << index . 1 >> \\
-<<- end >>
+<% for item in covertable %>
+\textbf{<< item[0] >>} & << item[1] >> \\
+<% endfor %>
 \end{longtable}
-<<- end >>
+<% endif %>
 
 Copyright \copyright \the\year{} \theauthor
 

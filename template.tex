@@ -1,61 +1,59 @@
-<< template "prefix.tex" . >>
+<% include "prefix.tex" %>
 \begin{document}
-<<- if (index . "has-frontmatter") >>
+<% if has_frontmatter %>
 \frontmatter
-<<- end >>
-<< template "title.tex" . >>
-<<- if .cover >>
-<< template "cover.tex" . >>
-<<- end >>
-<<- range (index . "include-before") >>
-<< . >>
-
-<<- end >>
-<<- if .toc >>
-  <<- with (index . "toc-title") >>
-\renewcommand*\contentsname{<< . >>}
-  <<- end >>
+<% endif %>
+<% include "title.tex" %>
+<% if cover %>
+<% include "cover.tex" %>
+<% endif %>
+<% for item in include_before %>
+<< item >>
+<% endfor %>
+<% if toc %>
+  <% if toc_title %>
+\renewcommand*\contentsname{<< toc_title >>}
+  <% endif %>
 {
-\setcounter{tocdepth}{<< index . "toc-depth" >>}
+\setcounter{tocdepth}{<< toc_depth >>}
 \tableofcontents
 }
-<<- end >>
-<<- if .lof >>
+<% endif %>
+<% if lof %>
 \listoffigures
-<<- end >>
-<<- if .lot >>
+<% endif %>
+<% if lot %>
 \listoftables
-<<- end >>
-<<- if .linestretch >>
-\setstretch{<< .linestretch >>}
-<<- end >>
-<<- if (index . "has-frontmatter") >>
+<% endif %>
+<% if linestretch %>
+\setstretch{<< linestretch >>}
+<% endif %>
+<% if has_frontmatter %>
 \mainmatter
-<<- end >>
-<< .body >>
+<% endif %>
+<< body >>
 
-<<- if (index . "has-frontmatter") >>
+<% if has_frontmatter %>
 \backmatter
-<<- end >>
-<<- if .natbib >>
-  <<- if .bibliography >>
-    <<- with (index . "biblio-title") >>
-      <<- if (index $ "has-chapters") >>
-\renewcommand\bibname{<< . >>}
-      <<- else >>
-\renewcommand\refname{<< . >>}
-      <<- end >>
-    <<- end >>
-  \bibliography{<< join "," .bibliography >>}
+<% endif %>
+<% if natbib %>
+  <% if bibliography %>
+    <% if biblio_title %>
+      <% if biblio_title.has_chapters %>
+\renewcommand\bibname{<< biblio_title >>}
+      <% else %>
+\renewcommand\refname{<< biblio_title >>}
+      <% endif %>
+    <% endif %>
+  \bibliography{<< bibliography | listify | join(",") >>}
 
-  <<- end >>
-<<- end >>
-<<- if .biblatex >>
-\printbibliography<<- with (index . "biblio-title") >>[title=<< . >>]<<- end >>
+  <% endif %>
+<% endif %>
+<% if biblatex %>
+\printbibliography<% if biblio_title %>[title=<< biblio_title >>]<% endif %>
 
-<<- end >>
-<<- range (index . "include-after") >>
-<< . >>
-
-<<- end >>
+<% endif %>
+<% for item in include_after %>
+<< item >>
+<% endfor %>
 \end{document}

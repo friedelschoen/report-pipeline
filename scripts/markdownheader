@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+
+import sys
+
+for i, line in enumerate(sys.stdin):
+    if i == 0:
+        if line.strip() != "---":
+            break
+        continue
+    else:
+        if line.strip() == "---":
+            break
+    sys.stdout.write(line)

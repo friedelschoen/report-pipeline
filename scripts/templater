@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+from pathlib import Path
+from typing import Any
+
+import yaml
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+
+def merge_dicts(dst: dict[str, Any], src: dict[str, Any]) -> dict[str, Any]:
+    for key, value in src.items():
+        if (
+            key in dst
+            and isinstance(dst[key], dict)
+            and isinstance(value, dict)
+        ):
+            merge_dicts(dst[key], value)
+        elif (
+            key in dst
+            and isinstance(dst[key], list)
+            and isinstance(value, list)
+        ):
+            dst[key] += value
+        else:
+            dst[key] = value
+    return dst
+
+
+def read_options(todo: list[str]) -> dict[str, Any]:
+    options: dict[str, Any] = {}
+
+    while todo:
+        current = Path(todo.pop(0)).resolve()
+
+        try:
+            with current.open("r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+        except OSError as e:
+            raise SystemExit(f"unable to open `{current}`: {e}")
+        except yaml.YAMLError as e:
+            raise SystemExit(f"unable to read `{current}`: {e}")
+
+        if not isinstance(data, dict):
+            raise SystemExit(
+                f"`{current}` must contain a YAML mapping at top level")
+
+        includes = data.pop("include", None)
+        if includes is not None:
+            currentdir = current.parent
+            if isinstance(includes, str):
+                todo.append(str((currentdir / includes).resolve()))
+            elif isinstance(includes, list):
+                for inc in includes:
+                    if isinstance(inc, str):
+                        todo.append(str((currentdir / inc).resolve()))
+
+        merge_dicts(options, data)
+
+    return options
+
+
+def listify(v: Any) -> list[Any]:
+    if isinstance(v, list):
+        return v
+    return [v]
+
+
+def build_environment(search_dirs: list[str], html_mode: bool) -> Environment:
+    env = Environment(
+        loader=FileSystemLoader(search_dirs),
+        autoescape=select_autoescape(enabled_extensions=(
+            "html", "htm", "xml")) if html_mode else False,
+        # undefined=StrictUndefined,
+        variable_start_string="<<",
+        variable_end_string=">>",
+        block_start_string="<%",
+        block_end_string="%>",
+        comment_start_string="<#",
+        comment_end_string="#>",
+        trim_blocks=True,
+    )
+
+    env.filters["listify"] = listify
+
+    if html_mode:
+        env.filters["safe_html"] = lambda s: s
+    else:
+        env.filters["safe_html"] = lambda s: s
+
+    return env
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-I", "--search", action="append",
+                        default=[], help="search for templates here")
+    parser.add_argument("-b", "--body", default="",
+                        help="use file instead of stdin as body")
+    parser.add_argument("-o", "--output", default="",
+                        help="output to file instead of stdout")
+    parser.add_argument("-D", "--define", action="append",
+                        default=[], help="define value")
+    parser.add_argument("-U", "--undefine", action="append",
+                        default=[], help="undefine value")
+    parser.add_argument("-w", "--html", action="store_true",
+                        help="use HTML templates")
+    parser.add_argument("template")
+    parser.add_argument("options", nargs="+")
+
+    args = parser.parse_args()
+
+    template_path = Path(args.template).resolve()
+    search_dirs = list(args.search)
+    search_dirs.extend([".", str(template_path.parent)])
+    search_dirs = [str(Path(p).resolve()) for p in search_dirs]
+
+    options = read_options(args.options)
+
+    if args.body:
+        try:
+            body = Path(args.body).read_text(encoding="utf-8")
+        except OSError as e:
+            raise SystemExit(f"unable to open `{args.body}`: {e}")
+    else:
+        body = sys.stdin.read()
+
+    options["body"] = body
+
+    for pair in args.define:
+        if "=" in pair:
+            key, value = pair.split("=", 1)
+            options[key] = value
+        else:
+            options[pair] = True
+
+    for key in args.undefine:
+        options.pop(key, None)
+
+    env = build_environment(search_dirs, args.html)
+
+    template = env.get_template(template_path.name)
+    rendered = template.render(**options)
+
+    if args.output:
+        try:
+            Path(args.output).write_text(rendered, encoding="utf-8")
+        except OSError as e:
+            raise SystemExit(f"unable to open `{args.output}`: {e}")
+    else:
+        sys.stdout.write(rendered)
+
+
+if __name__ == "__main__":
+    main()
