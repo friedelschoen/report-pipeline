@@ -3,7 +3,9 @@
 <% if has_frontmatter %>
 \frontmatter
 <% endif %>
+<% if titlepage %>
 <% include "title.tex" %>
+<% endif %>
 <% if cover %>
 <% include "cover.tex" %>
 <% endif %>
@@ -31,8 +33,7 @@
 <% if has_frontmatter %>
 \mainmatter
 <% endif %>
-<< body >>
-
+<% include body %>
 <% if has_frontmatter %>
 \backmatter
 <% endif %>

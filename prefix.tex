@@ -251,11 +251,7 @@
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 <% endif %>
 <% for package in packages %>
-<% if package in packageoptions %>
-\usepackage[<< packageoptions[package] >>]{<<package>>}
-<% else %>
-\usepackage{<<package>>}
-<% endif %>
+\usepackage<% if package in packageoptions %>[<< packageoptions[package] | listify | join(",") >>]<% endif %>{<<package>>}
 <% endfor %>
 <% for key, value in newcommands.items() %>
 \newcommand{\<< key >>}{<< value >>}
